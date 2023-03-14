@@ -66,6 +66,4 @@ To run this project, you will need to add the following environment variables to
 
 ## Authors
 
-- [@santos.pagtel](https://gitlab.com/santos.pagtel)
-- [@davi.soares](https://gitlab.com/davi.soares)
-- [@jean.cigoli](https://gitlab.com/jean.cigoli)
+- [@lucassm02](https://github.com/lucassm02)

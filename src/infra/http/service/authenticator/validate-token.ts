@@ -8,7 +8,7 @@ export class ValidateTokenService implements ValidateTokenProtocol {
   async validate(
     token: ValidateTokenProtocol.Params
   ): ValidateTokenProtocol.Result {
-    const url = '/v1/tokens/verify';
+    const url = '/v1/tokens';
     const method = 'GET';
     const body = {};
     const headers = {
@@ -37,7 +37,7 @@ export class ValidateTokenService implements ValidateTokenProtocol {
     logger.log({
       level: 'http',
       message: 'TOKEN VALIDATION',
-      meta: { keywords: { name: 'Jucas' }, services: ['AUTHENTICATION'] },
+      meta: { keywords: {}, services: [] },
       payload: {
         request: requestEntities,
         response: responseEntities,

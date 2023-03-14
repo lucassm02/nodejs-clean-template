@@ -28,7 +28,7 @@ export const ENVIRONMENT_VALUES = {
     HELM_FILE_NAME: 'production-values',
     ENV_FILE: '.env.production',
     REPLICA_COUNT: 2,
-    INGRESS_HOSTS: ['api.pagtel.com.br'],
+    INGRESS_HOSTS: ['api.domain.com.br'],
     RESOURCES: {
       requests: {
         cpu: '100m',
@@ -51,7 +51,7 @@ export const ENVIRONMENT_VALUES = {
     HELM_FILE_NAME: 'homologation-values',
     ENV_FILE: '.env.homologation',
     REPLICA_COUNT: 1,
-    INGRESS_HOSTS: ['homologation.pagtel.com.br'],
+    INGRESS_HOSTS: ['homologation.domain.com.br'],
     RESOURCES: {
       requests: {
         cpu: '100m',
@@ -74,7 +74,7 @@ export const ENVIRONMENT_VALUES = {
     HELM_FILE_NAME: 'staging-values',
     ENV_FILE: '.env.staging',
     REPLICA_COUNT: 1,
-    INGRESS_HOSTS: ['staging.pagtel.com.br'],
+    INGRESS_HOSTS: ['staging.domain.com.br'],
     RESOURCES: {
       requests: {
         cpu: '100m',
@@ -97,7 +97,7 @@ export const ENVIRONMENT_VALUES = {
     HELM_FILE_NAME: 'development-values',
     ENV_FILE: '.env.development',
     REPLICA_COUNT: 1,
-    INGRESS_HOSTS: ['development.pagtel.com.br'],
+    INGRESS_HOSTS: ['development.domain.com.br'],
     RESOURCES: {
       requests: {
         cpu: '100m',
