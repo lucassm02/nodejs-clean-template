@@ -4,6 +4,7 @@ import { MONGO, SERVER } from '@/util/constants';
 import mongoose from 'mongoose';
 
 import { application } from './application';
+import { gracefulShutdownApplication } from './configs/graceful-shutdown';
 
 application.onStart(async () => {
   try {
@@ -30,3 +31,7 @@ application.listenAsync(SERVER.PORT, () => {
     message: `Server is running on port: ${SERVER.PORT}`,
   });
 });
+
+['SIGTERM', 'SIGINT'].forEach((event) =>
+  process.on(event, gracefulShutdownApplication)
+);

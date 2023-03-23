@@ -4,6 +4,8 @@ import { consumersSetup } from '@/main/configs/consumers';
 import { logger, MONGO, RABBIT } from '@/util';
 import mongoose from 'mongoose';
 
+import { gracefulShutdownApplication } from './configs/graceful-shutdown';
+
 (async () => {
   try {
     const server = rabbitMqServer();
@@ -35,3 +37,7 @@ import mongoose from 'mongoose';
     logger.log(error);
   }
 })();
+
+['SIGTERM', 'SIGINT'].forEach((event) =>
+  process.on(event, gracefulShutdownApplication)
+);
