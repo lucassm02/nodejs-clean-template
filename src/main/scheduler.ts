@@ -2,6 +2,7 @@ import { sqlConnection } from '@/infra/db/mssql/util';
 import { logger, MONGO, Scheduler } from '@/util';
 import mongoose from 'mongoose';
 
+import { gracefulShutdownApplication } from './configs/graceful-shutdown';
 import { schedulerSetup } from './configs/scheduler';
 
 const scheduler = new Scheduler();
@@ -26,3 +27,7 @@ const scheduler = new Scheduler();
 
 logger.log({ level: 'info', message: 'Scheduler started!' });
 schedulerSetup(scheduler);
+
+['SIGTERM', 'SIGINT'].forEach((event) =>
+  process.on(event, gracefulShutdownApplication)
+);

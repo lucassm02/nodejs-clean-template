@@ -6,7 +6,9 @@ import {
 import { logger } from '@/util/observability';
 import { apmSpan, apmTransaction } from '@/util/observability/apm';
 import { logger as loggerDecorator } from '@/util/observability/loggers/decorators';
+import { sleep } from '@/util/sleep';
 import { Channel, connect, Connection, Message } from 'amqplib';
+import { randomUUID } from 'crypto';
 
 type Credentials = {
   user: string;
@@ -24,6 +26,8 @@ export class RabbitMqServer {
   private connection!: Connection;
   private channel!: Channel;
   private uri!: string;
+  private readonly consumerTags = new Map();
+  private readonly processingMessagesCount = new Map();
 
   private static instance: RabbitMqServer;
 
@@ -37,6 +41,12 @@ export class RabbitMqServer {
     }
 
     return RabbitMqServer.instance;
+  }
+
+  public async verifyStillHaveMessage() {
+    if (this.processingMessagesCount.size === 0) return;
+    await sleep(500);
+    await this.verifyStillHaveMessage();
   }
 
   public setCredentials(credentials: Credentials) {
@@ -60,6 +70,19 @@ export class RabbitMqServer {
   public async close() {
     if (!this.connection) return;
     await this.connection.close();
+  }
+
+  public cancelConsumers() {
+    if (!this.channel) return;
+    this.consumerTags.forEach(async (tag, key) => {
+      await this.channel.cancel(tag);
+      this.consumerTags.delete(key);
+    });
+  }
+
+  public async closeChanel() {
+    if (!this.channel) return;
+    await this.channel.close();
   }
 
   @loggerDecorator({
@@ -132,35 +155,46 @@ export class RabbitMqServer {
 
   public async consume(queue: string, callback: (payload: Payload) => void) {
     if (!this.connection || !this.channel) await this.restart();
-    await this.channel.consume(queue, async (message) => {
-      if (!message) return;
+    const { consumerTag } = await this.channel.consume(
+      queue,
+      async (message) => {
+        if (!message) return;
 
-      try {
-        const payload = {
-          body: this.messageToJson(message),
-          headers: message.properties.headers,
-          properties: { queue, ...message.fields },
-        };
+        const messageIdentifier = randomUUID();
+        this.processingMessagesCount.set(messageIdentifier, message);
 
-        await this.startTransaction(queue, payload, callback);
+        try {
+          const payload = {
+            body: this.messageToJson(message),
+            headers: message.properties.headers,
+            properties: { queue, ...message.fields },
+          };
 
-        this.channel.ack(message);
-      } catch (error) {
-        logger.log(error);
-        if (error.stack.includes('at JSON.parse')) {
-          logger.log({
-            level: 'warn',
-            message: 'UNABLE_TO_CONVERT_MESSAGE_TO_JSON',
-            payload: {
-              message: message.content.toString(),
-              headers: message.properties.headers,
-              properties: { queue, ...message.fields },
-            },
-          });
+          await this.startTransaction(queue, payload, callback);
+
+          this.channel.ack(message);
+        } catch (error) {
+          logger.log(error);
+          if (error.stack.includes('at JSON.parse')) {
+            logger.log({
+              level: 'warn',
+              message: 'UNABLE_TO_CONVERT_MESSAGE_TO_JSON',
+              payload: {
+                message: message.content.toString(),
+                headers: message.properties.headers,
+                properties: { queue, ...message.fields },
+              },
+            });
+          }
+
+          this.channel.ack(message);
+        } finally {
+          this.processingMessagesCount.delete(messageIdentifier);
         }
-
-        this.channel.ack(message);
       }
-    });
+    );
+
+    const consumerIdentifier = randomUUID();
+    this.consumerTags.set(consumerIdentifier, consumerTag);
   }
 }
